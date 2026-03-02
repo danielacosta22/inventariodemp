@@ -94,10 +94,8 @@ th { background-color: #2c3e50; color: white; }
 
 <script>
 // =======================================================
-// PEGA AQUÍ LA URL DE TU APLICACIÓN WEB DE APPS SCRIPT
-const API_URL = "https://script.google.com/macros/s/AKfycbxKNDhnZV1zjsvpcsCIZY67y8zNMurTBZznK-pkwwEbtqikHIDFZW-d2ixXlzGnCwgd/exec
-
-"; 
+// ⚠️ PASO VITAL: PEGA AQUÍ LA URL DE TU APLICACIÓN WEB DE APPS SCRIPT
+const API_URL = "https://script.google.com/macros/s/AKfycbxKNDhnZV1zjsvpcsCIZY67y8zNMurTBZznK-pkwwEbtqikHIDFZW-d2ixXlzGnCwgd/exec"; 
 // =======================================================
 
 let html5QrCode = null; 
@@ -177,13 +175,18 @@ function procesarEscaneo(codigo, destino) {
     }
 }
 
-// LLAMADAS AL SERVIDOR (POST)
+// LLAMADAS AL SERVIDOR (POST) CON EL ARREGLO CORS APLICADO
 async function ejecutarBackend(datos) {
     try {
-        let res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(datos) });
+        let res = await fetch(API_URL, { 
+            method: 'POST', 
+            // Esto le dice a Google Apps Script que no bloquee los datos entrantes desde GitHub
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(datos) 
+        });
         return await res.json();
     } catch (e) {
-        return { success: false, message: "Error de red. Verifica tu conexión." };
+        return { success: false, message: "Error de red. Verifica que el enlace de Apps Script esté configurado en 'Cualquier persona'." };
     }
 }
 
@@ -251,30 +254,5 @@ async function descargarReporte() {
         let csvContent = "\uFEFF"; 
         datos.forEach(fila => { csvContent += fila.map(celda => `"${String(celda).replace(/"/g, '""')}"`).join(",") + "\r\n"; });
         const link = document.createElement("a");
-        link.href = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }));
-        link.setAttribute("download", `Historial_Movimientos_${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link); link.click(); document.body.removeChild(link);
-    } catch (e) { Swal.fire('Error', 'No se pudo descargar el archivo.', 'error'); }
-    btn.innerText = "📥 Descargar Historial (Excel)"; btn.disabled = false;
-}
-
-function filtrarTabla() {
-    let input = document.getElementById("buscador");
-    let filter = input.value.toLowerCase();
-    let tr = document.getElementById("tabla-body").getElementsByTagName("tr");
-    for (let i = 0; i < tr.length; i++) {
-        if (tr[i].getElementsByTagName("td").length > 1) {
-            let tdSKU = tr[i].getElementsByTagName("td")[0]; let tdNombre = tr[i].getElementsByTagName("td")[1];
-            if (tdSKU || tdNombre) {
-                let txtValue = (tdSKU.textContent || tdSKU.innerText) + " " + (tdNombre.textContent || tdNombre.innerText);
-                tr[i].style.display = txtValue.toLowerCase().indexOf(filter) > -1 ? "" : "none";
-            }
-        }
-    }
-}
-
-window.onload = cargarTabla;
-</script>
-</body>
-</html>
+        link.href = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8
 
